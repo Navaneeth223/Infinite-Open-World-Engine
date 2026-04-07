@@ -301,6 +301,13 @@ async def _initialize_database() -> None:
                 
                 # Execute the statement
                 await conn.execute(stmt)
+
+            # Ensure legacy schema updates are applied for production databases
+            print("INFO: Ensuring worlds table has game_date column")
+            await conn.execute("ALTER TABLE worlds ADD COLUMN IF NOT EXISTS game_date JSONB")
+            await conn.execute(
+                'UPDATE worlds SET game_date = "current_date" WHERE game_date IS NULL AND "current_date" IS NOT NULL'
+            )
         finally:
             await pg.pool.release(conn)
         print("INFO: Database schema initialization completed successfully")

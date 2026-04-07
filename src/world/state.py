@@ -172,6 +172,7 @@ class WorldStateManager:
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
             """
+            world_date = world_data.get("game_date", world_data.get("current_date", {}))
             row = await pg.fetchrow(
                 query,
                 world_data["id"],
@@ -179,7 +180,7 @@ class WorldStateManager:
                 world_data.get("seed", 0),
                 world_data.get("lore", ""),
                 world_data.get("calendar_system", {}),
-                world_data.get("current_date", {}),
+                world_date,
             )
             return row or world_data
 

@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     chroma_port: int = 8001
     chroma_persist_dir: str = "./data/chroma"
     embedding_provider: str = "local"
-    api_secret_key: str | None = None
+    api_secret_key: str = "secret-key"
 
     world_tick_interval_seconds: int = 300
     real_to_game_time_ratio: int = 60
