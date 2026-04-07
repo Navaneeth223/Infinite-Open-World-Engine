@@ -274,9 +274,17 @@ async def _initialize_database() -> None:
     if not pg.is_connected or pg.pool is None:
         return
     try:
-        await pg.execute(SCHEMA_SQL)
+        # Split SQL statements by semicolon and execute each one individually
+        statements = [stmt.strip() for stmt in SCHEMA_SQL.split(';') if stmt.strip()]
+        conn = await pg.pool.acquire()
+        try:
+            for stmt in statements:
+                await conn.execute(stmt)
+        finally:
+            await pg.pool.release(conn)
+        print("INFO: Database tables created successfully")
     except Exception as e:
-        print(f"Warning: Database schema initialization encountered an issue: {e}")
+        print(f"WARNING: Database schema initialization encountered an issue: {e}")
 
 
 @asynccontextmanager
