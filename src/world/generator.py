@@ -12,7 +12,7 @@ class WorldGenerator:
             "seed": 123456,
             "lore": "A land once shattered by celestial storms now clings to survival around fractured cities and scattered oases.",
             "calendar_system": {"year_length_days": 360, "months": ["Bram", "Lorn", "Hale", "Mist"], "era_name": "The Shattering", "current_year": 1},
-            "current_date": {"year": 1, "month": 1, "day": 1, "hour": 9},
+            "game_date": {"year": 1, "month": 1, "day": 1, "hour": 9},
             "starting_location": {
                 "name": "The Rusted Anvil Tavern",
                 "type": "small_town",

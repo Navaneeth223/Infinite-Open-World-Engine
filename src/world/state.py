@@ -168,7 +168,7 @@ class WorldStateManager:
     async def create_world(world_data: dict) -> dict:
         if pg.is_connected:
             query = """
-                INSERT INTO worlds (id, name, seed, lore, calendar_system, "current_date")
+                INSERT INTO worlds (id, name, seed, lore, calendar_system, game_date)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
             """
@@ -192,7 +192,7 @@ class WorldStateManager:
         if world is None:
             return {"world_id": world_id, "status": "ticked", "note": "world state unavailable"}
 
-        current_date = world.get("current_date", {"year": 1, "month": 1, "day": 1, "hour": 9})
+        current_date = world.get("game_date", {"year": 1, "month": 1, "day": 1, "hour": 9})
         next_hour = current_date.get("hour", 9) + 1
         next_day = current_date.get("day", 1)
         next_year = current_date.get("year", 1)
@@ -201,7 +201,7 @@ class WorldStateManager:
             next_hour = 0
             next_day += 1
 
-        world["current_date"] = {
+        world["game_date"] = {
             "year": next_year,
             "month": current_date.get("month", 1),
             "day": next_day,
@@ -214,6 +214,6 @@ class WorldStateManager:
         return {
             "world_id": world_id,
             "status": "ticked",
-            "new_game_date": world["current_date"],
+            "new_game_date": world["game_date"],
             "location_updates": world.get("starting_location", {}),
         }

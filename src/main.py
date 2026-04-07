@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS worlds (
     seed BIGINT NOT NULL,
     lore TEXT,
     calendar_system JSONB,
-    "current_date" JSONB,
+    game_date JSONB,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -272,6 +272,7 @@ CREATE INDEX IF NOT EXISTS idx_quests_status ON quests(status);
 async def _initialize_database() -> None:
     """Initialize database schema if not already created."""
     if not pg.is_connected or pg.pool is None:
+        print("WARNING: Database not connected during initialization")
         return
     try:
         # Split SQL statements by semicolon and execute each one individually
@@ -279,34 +280,77 @@ async def _initialize_database() -> None:
         conn = await pg.pool.acquire()
         try:
             for stmt in statements:
+                # Extract table/extension name for logging
+                stmt_upper = stmt.upper()
+                if 'CREATE EXTENSION IF NOT EXISTS' in stmt_upper:
+                    print("INFO: Creating PostgreSQL extension (pgcrypto)")
+                elif 'CREATE TABLE IF NOT EXISTS' in stmt_upper:
+                    # Extract table name from CREATE TABLE IF NOT EXISTS tablename
+                    import re
+                    match = re.search(r'CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+(\w+)', stmt, re.IGNORECASE)
+                    if match:
+                        table_name = match.group(1)
+                        print(f"INFO: Creating table '{table_name}'")
+                elif 'CREATE INDEX IF NOT EXISTS' in stmt_upper:
+                    # Extract index name from CREATE INDEX IF NOT EXISTS indexname
+                    import re
+                    match = re.search(r'CREATE\s+INDEX\s+IF\s+NOT\s+EXISTS\s+(\w+)', stmt, re.IGNORECASE)
+                    if match:
+                        index_name = match.group(1)
+                        print(f"INFO: Creating index '{index_name}'")
+                
+                # Execute the statement
                 await conn.execute(stmt)
         finally:
             await pg.pool.release(conn)
-        print("INFO: Database tables created successfully")
+        print("INFO: Database schema initialization completed successfully")
     except Exception as e:
-        print(f"WARNING: Database schema initialization encountered an issue: {e}")
+        print(f"ERROR: Database schema initialization failed: {e}")
+        import traceback
+        print(f"ERROR: Traceback: {traceback.format_exc()}")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    print("INFO: Starting INFINITUM application lifespan")
+    
+    # Startup
     try:
+        print("INFO: Connecting to PostgreSQL database")
         await pg.connect()
+        print("INFO: PostgreSQL connection established")
         await _initialize_database()
-    except Exception:
-        pass
+        print("INFO: Database initialization completed")
+    except Exception as e:
+        print(f"ERROR: Database startup failed: {e}")
+        import traceback
+        print(f"ERROR: {traceback.format_exc()}")
+    
     try:
+        print("INFO: Connecting to Redis cache")
         await redis_client.connect()
-    except Exception:
-        pass
+        print("INFO: Redis connection established")
+    except Exception as e:
+        print(f"WARNING: Redis startup failed (continuing without cache): {e}")
+    
+    print("INFO: INFINITUM application ready to serve requests")
     yield
+    
+    # Shutdown
+    print("INFO: Shutting down INFINITUM application")
     try:
         await pg.close()
-    except Exception:
-        pass
+        print("INFO: PostgreSQL connection closed")
+    except Exception as e:
+        print(f"WARNING: Error closing PostgreSQL connection: {e}")
+    
     try:
         await redis_client.close()
-    except Exception:
-        pass
+        print("INFO: Redis connection closed")
+    except Exception as e:
+        print(f"WARNING: Error closing Redis connection: {e}")
+    
+    print("INFO: INFINITUM application shutdown complete")
 
 
 app = FastAPI(

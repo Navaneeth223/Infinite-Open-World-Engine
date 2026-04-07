@@ -6,7 +6,7 @@ def build_ui_state(world: Dict, player: Dict, npcs: list[Dict]) -> Dict:
         "world": {
             "id": world.get("id"),
             "name": world.get("name"),
-            "current_date": world.get("current_date"),
+            "current_date": world.get("game_date"),
         },
         "player": {
             "id": player.get("id"),
