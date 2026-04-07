@@ -193,6 +193,58 @@ ghcr.io/<owner>/<repository>/infinitum:latest
 2. Run `docker compose up --build`.
 3. Point your browser to `http://localhost:8000`.
 
+## How to see the project live
+
+This project is ready to run as a live backend service, but it does not include a hosted public URL by default. To see the software live, host the container on a server or cloud provider and expose port `8000`.
+
+### Run live on a server
+
+1. Push the repository changes to GitHub (already done).
+2. Choose a cloud host with Docker support, such as:
+   - DigitalOcean App Platform
+   - Render
+   - Fly.io
+   - AWS ECS / Fargate
+   - Google Cloud Run
+   - Azure App Service
+3. Configure the host to use the image built by GitHub Actions or build the Dockerfile directly from the repository.
+4. Set environment variables from `.env` or the provider dashboard.
+5. Open the provided host URL in a browser.
+
+### Example - using Docker Compose on a remote host
+
+1. SSH into your server.
+2. Clone the repository.
+3. Copy `.env.example` to `.env` and adjust the settings.
+4. Run:
+
+```bash
+docker compose up --build -d
+```
+
+5. If your server routes port `8000`, open `http://<your-server-ip>:8000`.
+
+### Example - using the GitHub Actions built image
+
+1. The workflow publishes an image to `ghcr.io/<owner>/<repository>/infinitum:latest`.
+2. On your host, pull the image:
+
+```bash
+docker pull ghcr.io/<owner>/<repository>/infinitum:latest
+```
+
+3. Run the container:
+
+```bash
+docker run -d -p 8000:8000 \
+  -e DATABASE_URL=<your-db> \
+  -e REDIS_URL=<your-redis> \
+  -e API_SECRET_KEY=<secret-key> \
+  ghcr.io/<owner>/<repository>/infinitum:latest
+```
+
+4. Open `http://<your-host>:8000`.
+
 ## Notes
 
 - If `API_SECRET_KEY` is set, most routes require the header `x-api-key: <API_SECRET_KEY>`.
