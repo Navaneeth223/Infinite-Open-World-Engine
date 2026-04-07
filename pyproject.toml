@@ -1,0 +1,18 @@
+[project]
+name = "infinitum"
+version = "0.1.0"
+description = "AI Game Master prototype for Infinite Open World Engine"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[project.dependencies]
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+pydantic = "^2.6.0"
+httpx = "^0.26.0"
+python-dotenv = "^1.0.0"
+asyncpg = "^0.27.0"
+redis = "^4.6.0"
+chromadb = "^0.4.0"
+alembic = "^1.15.0"
+pytest = "^8.0.0"

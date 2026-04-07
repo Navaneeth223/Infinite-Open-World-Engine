@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://infinitum:password@db:5432/infinitum
+      - REDIS_URL=redis://cache:6379
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - EMBEDDING_PROVIDER=local
+    depends_on:
+      - db
+      - cache
+      - chromadb
+    volumes:
+      - ./data:/app/data
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: infinitum
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: infinitum
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+volumes:
+  postgres_data:
+  chroma_data:
