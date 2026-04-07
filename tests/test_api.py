@@ -26,8 +26,52 @@ def test_world_create_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert "world_id" in data
+    assert "player_id" in data
     assert data["world_name"]
     assert "starting_location" in data
+
+
+def test_player_profile_endpoint_returns_profile():
+    create_response = client.post(
+        "/api/v1/world/create",
+        headers=API_HEADERS,
+        json={
+            "character_name": "Asha",
+            "character_race": "Human",
+            "character_class": "Scholar",
+            "character_backstory": "Searching for the truth behind my mentor's disappearance.",
+        },
+    )
+    assert create_response.status_code == 200
+    player_id = create_response.json()["player_id"]
+
+    profile_response = client.get(f"/api/v1/player/profile?player_id={player_id}", headers=API_HEADERS)
+    assert profile_response.status_code == 200
+    profile_data = profile_response.json()
+    assert profile_data["player_id"] == player_id
+    assert profile_data["character_name"] == "Asha"
+    assert profile_data["world_id"]
+
+
+def test_player_quests_endpoint_returns_list():
+    create_response = client.post(
+        "/api/v1/world/create",
+        headers=API_HEADERS,
+        json={
+            "character_name": "Asha",
+            "character_race": "Human",
+            "character_class": "Scholar",
+            "character_backstory": "Searching for the truth behind my mentor's disappearance.",
+        },
+    )
+    assert create_response.status_code == 200
+    player_id = create_response.json()["player_id"]
+
+    quests_response = client.get(f"/api/v1/player/quests?player_id={player_id}", headers=API_HEADERS)
+    assert quests_response.status_code == 200
+    quests_data = quests_response.json()
+    assert isinstance(quests_data, list)
+    assert quests_data and quests_data[0]["title"]
 
 
 def test_world_create_and_retrieve_world_map():

@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from src.api.auth import get_api_key
@@ -8,6 +10,8 @@ from src.api.models import (
     PlayerActionResponse,
     WorldCreationRequest,
     WorldCreationResponse,
+    PlayerProfileResponse,
+    QuestSummary,
     WorldEvent,
     JournalEntry,
     NPCRelationshipResponse,
@@ -15,6 +19,7 @@ from src.api.models import (
 )
 from src.brain.story import generate_gm_response
 from src.memory.retrieval import retrieval
+from src.quest.generator import quest_generator
 from src.world.generator import world_generator
 from src.world.state import WorldStateManager
 
@@ -88,13 +93,74 @@ async def create_world(request: WorldCreationRequest) -> WorldCreationResponse:
         character_backstory=request.character_backstory,
     )
     await WorldStateManager.create_world(world)
+
+    player_id = str(uuid.uuid4())
+    player = {
+        "id": player_id,
+        "world_id": world["id"],
+        "character_name": request.character_name,
+        "character_race": request.character_race,
+        "character_class": request.character_class,
+        "character_backstory": request.character_backstory,
+        "level": 1,
+        "experience": 0,
+        "health": 100,
+        "max_health": 100,
+        "gold": 50,
+        "current_location_id": world["starting_location"].get("id"),
+        "reputation": {"global": 0},
+        "status_effects": {},
+    }
+    await WorldStateManager.create_player(player)
+
     return WorldCreationResponse(
         world_id=world["id"],
+        player_id=player_id,
         world_name=world["name"],
         starting_location=world["starting_location"],
         initial_world_events=world["initial_world_events"],
         main_quest_hook=world["main_quest_hook"],
     )
+
+
+@router.get("/api/v1/player/profile", response_model=PlayerProfileResponse)
+async def get_player_profile(player_id: str) -> PlayerProfileResponse:
+    player = await WorldStateManager.get_player(player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+    return PlayerProfileResponse(
+        player_id=player_id,
+        world_id=player.get("world_id", ""),
+        character_name=player.get("character_name", "Unknown"),
+        character_race=player.get("character_race", "Unknown"),
+        character_class=player.get("character_class", "Unknown"),
+        level=player.get("level", 1),
+        health=player.get("health", 100),
+        max_health=player.get("max_health", 100),
+        gold=player.get("gold", 0),
+        reputation=player.get("reputation", {}),
+        current_location_id=player.get("current_location_id"),
+        status_effects=player.get("status_effects", {}),
+    )
+
+
+@router.get("/api/v1/player/quests", response_model=List[QuestSummary])
+async def get_player_quests(player_id: str) -> List[QuestSummary]:
+    player = await WorldStateManager.get_player(player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail="Player not found")
+
+    world_id = player.get("world_id")
+    if not world_id:
+        return []
+
+    quest = await quest_generator.generate_emergent_quest({}, {})
+    return [QuestSummary(
+        title=quest["title"],
+        description=quest["description"],
+        status="active",
+        difficulty=quest.get("difficulty", 3),
+    )]
 
 
 @router.post("/api/v1/npc/talk", response_model=NPCTalkResponse)

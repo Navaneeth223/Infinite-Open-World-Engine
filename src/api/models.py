@@ -60,10 +60,33 @@ class PlayerActionResponse(BaseModel):
 
 class WorldCreationResponse(BaseModel):
     world_id: str
+    player_id: str
     world_name: str
     starting_location: Dict[str, Any]
     initial_world_events: List[Dict[str, Any]]
     main_quest_hook: Dict[str, Any]
+
+
+class PlayerProfileResponse(BaseModel):
+    player_id: str
+    world_id: str
+    character_name: str
+    character_race: str
+    character_class: str
+    level: int
+    health: int
+    max_health: int
+    gold: int
+    reputation: Dict[str, Any]
+    current_location_id: Optional[str] = None
+    status_effects: Dict[str, Any] = Field(default_factory=dict)
+
+
+class QuestSummary(BaseModel):
+    title: str
+    description: str
+    status: str = "active"
+    difficulty: int = 3
 
 
 class WorldEvent(BaseModel):

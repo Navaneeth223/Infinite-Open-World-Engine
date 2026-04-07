@@ -43,6 +43,38 @@ class WorldStateManager:
             "locations": [starting_location],
         }
 
+    @classmethod
+    async def create_player(cls, player_data: dict) -> dict:
+        if pg.is_connected:
+            query = """
+                INSERT INTO players
+                (id, world_id, character_name, character_race, character_class, character_backstory, level, experience, health, max_health, reputation, current_location_id, inventory, gold, status_effects)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                RETURNING *
+            """
+            row = await pg.fetchrow(
+                query,
+                player_data["id"],
+                player_data["world_id"],
+                player_data["character_name"],
+                player_data["character_race"],
+                player_data["character_class"],
+                player_data.get("character_backstory", ""),
+                player_data.get("level", 1),
+                player_data.get("experience", 0),
+                player_data.get("health", 100),
+                player_data.get("max_health", 100),
+                player_data.get("reputation", {}),
+                player_data.get("current_location_id"),
+                player_data.get("inventory", {}),
+                player_data.get("gold", 50),
+                player_data.get("status_effects", {}),
+            )
+            return row or player_data
+
+        cls._player_store[player_data["id"]] = player_data
+        return player_data
+
     @staticmethod
     async def get_world(world_id: str) -> dict | None:
         if pg.is_connected:

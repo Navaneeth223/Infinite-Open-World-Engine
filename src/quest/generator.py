@@ -20,7 +20,7 @@ class QuestGenerator:
                 "experience": 100,
                 "items": [],
                 "reputation_changes": [],
-                "unique_reward": null,
+                "unique_reward": None,
             },
             "hidden_layer": "The caravan carried more than goods; it carried a secret message for the player's lost mentor.",
         }
