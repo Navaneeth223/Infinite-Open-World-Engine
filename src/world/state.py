@@ -168,7 +168,7 @@ class WorldStateManager:
     async def create_world(world_data: dict) -> dict:
         if pg.is_connected:
             query = """
-                INSERT INTO worlds (id, name, seed, lore, calendar_system, current_date)
+                INSERT INTO worlds (id, name, seed, lore, calendar_system, "current_date")
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *
             """

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS worlds (
     seed BIGINT NOT NULL,
     lore TEXT,
     calendar_system JSONB,
-    current_date JSONB,
+    "current_date" JSONB,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
